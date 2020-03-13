@@ -226,6 +226,7 @@ resource "aws_placement_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 func testAccAWSPlacementGroupConfig_partition(rName string) string {
 	return fmt.Sprintf(`
