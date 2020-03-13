@@ -165,6 +165,33 @@ func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resou
 	}
 }
 
+func TestAccAWSPlacementGroup_partition(t *testing.T) {
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfig_partition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
+					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSPlacementGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
@@ -199,4 +226,13 @@ resource "aws_placement_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+
+func testAccAWSPlacementGroupConfig_partition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %q
+  strategy        = "partition"
+  partition_count = 7
+}
+`, rName)
 }

@@ -886,6 +886,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rInt := 3
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -895,7 +896,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPlacementGroup(rName),
+				Config: testAccInstanceConfigPlacementGroup(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						resourceName, &v),
@@ -903,6 +904,10 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 						resourceName,
 						"placement_group",
 						rName),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"placement_partition_number",
+						fmt.Sprintf("%d", rInt)),
 				),
 			},
 			{
@@ -3037,11 +3042,12 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfigPlacementGroup(rName string) string {
+func testAccInstanceConfigPlacementGroup(rName string, rInt int) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name     = %[1]q
-  strategy = "cluster"
+  name            = %[1]q
+  strategy        = "partition"
+  partition_count = 3
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
@@ -3051,11 +3057,12 @@ resource "aws_instance" "test" {
   subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
   placement_group             = "${aws_placement_group.test.name}"
+  placement_partition_number  = %d
 
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
-`, rName)
+`, rName, rInt)
 }
 
 func testAccInstanceConfigIpv6ErrorConfig(rName string) string {

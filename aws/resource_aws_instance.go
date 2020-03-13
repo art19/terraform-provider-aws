@@ -74,6 +74,13 @@ func resourceAwsInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"placement_partition_number": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -706,6 +713,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if instance.Placement.GroupName != nil {
 		d.Set("placement_group", instance.Placement.GroupName)
+	}
+	if instance.Placement.PartitionNumber != nil {
+		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
@@ -1876,11 +1886,17 @@ func buildAwsInstanceOpts(
 	subnet, hasSubnet := d.GetOk("subnet_id")
 	subnetID := subnet.(string)
 
+	partitionNumber, hasPartitionNumber := d.GetOk("placement_partition_number")
+
 	// Placement is used for aws_instance; SpotPlacement is used for
 	// aws_spot_instance_request. They represent the same data. :-|
 	opts.Placement = &ec2.Placement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		GroupName:        aws.String(d.Get("placement_group").(string)),
+	}
+
+	if hasPartitionNumber {
+		opts.Placement.PartitionNumber = aws.Int64(int64(partitionNumber.(int)))
 	}
 
 	opts.SpotPlacement = &ec2.SpotPlacement{

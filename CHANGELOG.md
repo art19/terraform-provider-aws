@@ -1,3 +1,7 @@
+## Unreleased
+
+* Implements `placement_partition_number` on top of ysfj's partition_count enhancement (https://github.com/david-cako/terraform-provider-aws/commit/9d4a689d8d55ccf11bc6691b9ab95bd38e8dfd2d)
+
 ## 2.53.0 (March 12, 2020)
 
 NOTES:

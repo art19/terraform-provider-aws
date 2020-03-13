@@ -25,9 +25,9 @@ resource "aws_placement_group" "web" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
+* `partition_count` - (Optional) The number of partitions. Valid only when Strategy is set to partition.
 * `strategy` - (Required) The placement strategy.
 * `tags` - (Optional) Key-value mapping of resource tags.
-
 
 ## Attributes Reference
 
